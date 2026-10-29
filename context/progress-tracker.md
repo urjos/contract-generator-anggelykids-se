@@ -31,14 +31,15 @@ Verificar typecheck, lint y bundle de Android; luego iniciar la Unidad 2 con Sup
 
 ## In Progress
 
-- Verificación del scaffold: `npm run typecheck`, `npm run lint` y bundle de Android.
+- Instalación de dependencias y verificación del scaffold a cargo del usuario (`npm install`, `npm run typecheck`, `npm run lint`).
 
 ## Next Up
 
-1. Recibir el logo PNG y la lista definitiva de teléfonos/redes para la plantilla del PDF.
-2. Crear el proyecto Supabase y configurar la cuenta propietaria única (signups desactivados).
-3. Escribir las migraciones iniciales: clientes, eventos, contratos, pagos, plantillas, documentos, auditoría y RLS.
-4. Implementar inicio de sesión, recuperación de contraseña y bloqueo de rutas.
+1. Instalar dependencias y verificar typecheck, lint y bundle de Android.
+2. Recibir el logo PNG y la lista definitiva de teléfonos/redes para la plantilla del PDF.
+3. Crear el proyecto Supabase y configurar la cuenta propietaria única (signups desactivados).
+4. Escribir las migraciones iniciales: clientes, eventos, contratos, pagos, plantillas, documentos, auditoría y RLS.
+5. Implementar inicio de sesión, recuperación de contraseña y bloqueo de rutas.
 
 ## Open Questions
 
@@ -68,6 +69,6 @@ Verificar typecheck, lint y bundle de Android; luego iniciar la Unidad 2 con Sup
 ## Session Notes
 
 - En WSL, Node se instaló en `~/.local/node/bin` (v24.19.0); hay que anteponerlo al `PATH` porque el `node` de Windows está roto en este entorno.
-- `npm install` tarda varios minutos por estar el repo en OneDrive sobre `/mnt/c`.
+- `npm install` sobre `/mnt/c` falló con `ENOENT: rename` por la sincronización de OneDrive. Se eliminó `node_modules`; la instalación la hará el usuario en el entorno que prefiera.
 - NativeWind 4.2.7 declara soporte hasta Expo SDK 57; se está verificando sobre SDK 58. Si el bundle falla, la alternativa es NativeWind 5 RC o fijar SDK 57.
 - Los assets de icono y splash siguen siendo los genéricos de Expo hasta recibir la marca oficial.
