@@ -29,12 +29,13 @@ Los valores se implementarán como colores semánticos en la configuración de N
 
 | Role | Font | Usage |
 | --- | --- | --- |
-| UI | System / Inter si se incorpora | Formularios, datos y navegación |
-| Headings | System / Inter SemiBold | Títulos y secciones |
-| Contract document | Por definir según formato oficial | Previsualización y PDF |
+| UI | Fuente del sistema (Inter opcional en una fase posterior) | Formularios, datos y navegación |
+| Headings | Fuente del sistema SemiBold | Títulos y secciones |
+| Contract document | Serif del sistema en la app; `Times-Roman`/`Helvetica-Bold` en el PDF | Previsualización y PDF |
 
 - Cuerpo mínimo: 16 sp para campos y contenido importante.
 - Etiquetas auxiliares: mínimo 12 sp, nunca como única explicación de una acción crítica.
+- El MVP no embebe fuentes personalizadas. La identidad visual se apoya en los tokens de color, el logo y la firma de `assets/brand/`.
 
 ## Border Radius
 

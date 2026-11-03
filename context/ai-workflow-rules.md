@@ -4,7 +4,7 @@
 
 Construir Anggely Kids Contratos incrementalmente y contra los archivos de `context/`. Cada unidad debe resolver un flujo pequeño, verificable y consistente con las decisiones de producto, seguridad y auditoría descritas aquí.
 
-Antes de implementar una unidad, revisar `project-overview.md`, `architecture.md`, `code-standards.md` y `progress-tracker.md`. Resolver requisitos ambiguos en los archivos de contexto, no inventarlos dentro del código.
+Antes de implementar una unidad, revisar `project-overview.md`, `architecture.md`, `code-standards.md`, `progress-tracker.md` y la feature-spec activa en `context/feature-specs/`. Resolver requisitos ambiguos en los archivos de contexto, no inventarlos dentro del código.
 
 ## Implementation Order
 

@@ -72,7 +72,7 @@ La primera versión es para una única persona responsable de la operación; no 
 - Gestión de clientes, eventos y contratos.
 - Flujo de borrador a contrato firmado con bitácora.
 - Consulta, filtros y generación de documento basado en una plantilla aprobada.
-- PDF con logo y bloque de contacto/redes vigente de Anggely Kids.
+- PDF con logo, firma de la representante y bloque de contacto/redes vigente de Anggely Kids.
 
 ### Out of Scope
 
@@ -96,10 +96,14 @@ La primera versión es para una única persona responsable de la operación; no 
 
 Estados alternativos: `cancelado`, `anulado` y `archivado`. Un contrato firmado no se edita directamente: se anula con motivo y fecha, y se crea un contrato de reemplazo como borrador enlazado al original. El número de contrato no se reutiliza.
 
-## Product Assumptions to Validate
+## Product Decisions
 
-- La empresa entregará su formato actual de contrato y las cláusulas que no deben cambiar.
-- El formato físico recibido se convirtió en la especificación de campos de `contract-template.md`; el texto legal requiere confirmación antes de publicarse.
+- El formato físico ya fue entregado y convertido en la especificación de campos de `contract-template.md`; el texto legal se conserva literal y versionado hasta que Anggely Kids confirme un cambio.
 - El monto se manejará en soles peruanos (PEN).
-- La firma del MVP es una confirmación manual con fecha; la captura de una firma en PNG queda para una fase posterior.
-- La app se usará en varios dispositivos; los conflictos de edición se resolverán por bloqueo optimista.
+- La firma del cliente en el MVP es una confirmación manual con fecha. La firma de la representante se incorpora al PDF como PNG estático; la captura de la firma del cliente queda para una fase posterior.
+- La app se usará en varios dispositivos; los conflictos de edición se resolverán por bloqueo optimista con `version`.
+- Un contrato cubre exactamente un evento; varios eventos requieren contratos separados.
+- El teléfono del cliente se normaliza a E.164 y sirve para sugerir clientes existentes, sin impedir números compartidos.
+- "Próximos eventos" es solo una sección ordenada por fecha en Inicio; no hay notificaciones en el MVP.
+- La retención operativa es de 5 años desde la firma, con revisión manual posterior y sin purga automática, sujeta a validación legal.
+- El número de contrato es una serie de 5 dígitos (`N° 00001`) asignada una sola vez al confirmar, sin huecos y sin prefijo de año.

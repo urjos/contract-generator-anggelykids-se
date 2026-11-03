@@ -17,6 +17,7 @@ Lee los siguientes archivos en orden antes de implementar o tomar cualquier deci
 5. `context/ai-workflow-rules.md` — flujo de trabajo de desarrollo, reglas de alcance y enfoque de entrega
 6. `context/progress-tracker.md` — fase actual, trabajo completado, preguntas abiertas y siguientes pasos
 7. `context/contract-template.md` — contrato, condiciones y firmas
+8. `context/feature-specs/` — especificaciones por unidad; lee la spec activa antes de implementar
 
 Actualiza `context/progress-tracker.md` después de cada cambio significativo en la implementación.
 

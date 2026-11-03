@@ -28,11 +28,29 @@
 
 ## Storage Model
 
-- **PostgreSQL (Supabase)**: `clients`, `events`, `service_catalog`, `contract_templates`, `contracts`, `contract_payments`, `contract_documents` y `contract_audit_log`. Todos los registros de negocio incluyen `created_at` y `updated_at`; no existe una tabla de usuarios ni roles.
-- **Supabase Storage**: bucket privado `contract-documents` para PDFs generados y, si se aprueba el requisito, evidencias de firma. Los archivos se organizan por `contract_id` y versión, y se protegen con políticas equivalentes a las del contrato.
+- **PostgreSQL (Supabase)**: `clients`, `events`, `service_catalog`, `contract_templates`, `contracts`, `contract_payments`, `contract_documents`, `contract_audit_log`, `contract_counters` y `brand_settings`. Todos los registros de negocio incluyen `created_at` y `updated_at`; no existe una tabla de usuarios ni roles. `contracts` incluye `version` para bloqueo optimista.
+- **Supabase Storage**: bucket privado `contract-documents` para PDFs generados y, si se aprueba el requisito, evidencias de firma. Los archivos se organizan por `contract_id` y versión, y se protegen con políticas equivalentes a las del contrato. El logo y la firma de la representante son activos de marca versionados, no evidencia de firma del cliente.
 - **SecureStore del dispositivo**: únicamente tokens de sesión gestionados por Supabase y secretos locales estrictamente necesarios; nunca contratos como fuente de verdad.
 
 Los importes se guardan como enteros en céntimos para evitar errores de punto flotante. El pago se modela en `contract_payments` (append-only): el "a cuenta" y el saldo se derivan de `sum(amount_cents)` y nunca se editan como columnas del contrato. El saldo se calcula en servidor como `total_amount_cents − sum(pagos)`; un contrato no puede recibir pagos que superen el total. Un contrato conserva una instantánea de la plantilla y cláusulas para que cambios posteriores no alteren documentos históricos. La especificación detallada de campos impresos está en `context/contract-template.md`.
+
+### Numeración y concurrencia
+
+- `contract_counters` contiene una fila por serie (`name`, `next_value`) y se actualiza con `SELECT ... FOR UPDATE` dentro de la transacción que confirma el contrato.
+- El número `N° 00001` se asigna una sola vez al pasar a `pendiente_de_firma`; los borradores no consumen número. Un rollback no consume el número, por lo que la serie es gapless.
+- `contracts.version` empieza en 1 y se incrementa en cada mutación. Los `UPDATE` incluyen `version = version_esperada`; si no afectan filas, la app informa un conflicto y recarga el contrato en lugar de sobrescribirlo.
+
+### Zona horaria y clientes
+
+- La zona horaria de operación es `America/Lima`. `event.starts_at` se almacena como `timestamptz` y se presenta en `es-PE`.
+- `client.phone_e164` se normaliza a E.164. Un índice no único permite buscar coincidencias; la app sugiere reutilizar un cliente existente, pero no bloquea números compartidos.
+- Cada contrato referencia exactamente un `event_id`; no se admiten varios eventos dentro del mismo contrato.
+
+### Configuración de marca
+
+- `brand_settings` es una fila única con `business_name`, `phone`, `whatsapp`, `social_links` (JSONB), `logo_storage_path`, `signature_storage_path`, `updated_at`.
+- Al confirmar un contrato, estos valores se copian a `template_snapshot.brand_snapshot` para que los PDF históricos conserven la marca vigente al momento de la emisión.
+- La generación del PDF se bloquea si faltan logo, firma de la representante o datos de contacto obligatorios.
 
 ### Pagos
 
@@ -46,6 +64,13 @@ Los importes se guardan como enteros en céntimos para evitar errores de punto f
 - `contracts` referencia `template_id` y guarda `template_snapshot` al confirmar.
 - `contract_documents` registra `contract_id`, `storage_path`, `sha256`, `template_version` y `generated_at`.
 - El PDF lo genera la Edge Function `generate-contract-pdf` desde el snapshot y se entrega con signed URL de corta duración; la app ofrece descarga y compartir por WhatsApp.
+- El PDF usa fuentes estándar (`Times-Roman` para cuerpo y `Helvetica-Bold` para títulos) para no depender de fuentes embebidas en el MVP.
+
+### Entornos y activos
+
+- El MVP usa un proyecto Supabase remoto; las migraciones se versionan en `supabase/migrations` y se aplican con Supabase CLI. Docker local es opcional.
+- Las variables públicas `EXPO_PUBLIC_SUPABASE_URL` y `EXPO_PUBLIC_SUPABASE_ANON_KEY` viven en `.env.local` y en EAS; `SUPABASE_SERVICE_ROLE_KEY` solo existe en Edge Functions y secretos del servidor.
+- Los activos visuales de la app viven en `assets/brand/` (`logo.png`, `signature.png`, iconos, splash y favicon). Los placeholders de desarrollo deben sustituirse por los archivos oficiales antes de producción.
 
 ## Single-Operator Access Model
 
@@ -54,24 +79,32 @@ Los importes se guardan como enteros en céntimos para evitar errores de punto f
 - Cada registro se vincula a `auth.uid()` mediante `owner_id`. RLS permite que solo la cuenta propietaria consulte o modifique los datos.
 - La bitácora registra acción, momento y cambios; no requiere distinguir actores porque la operación es individual.
 - La misma cuenta puede iniciar sesión en un teléfono nuevo o tras una reinstalación y recuperar sus contratos, documentos y catálogo.
-- El cliente móvil nunca incorpora la `service_role` key. La generación de un número definitivo o documento protegido se hace con una Edge Function, no desde el cliente.
+- El cliente móvil nunca incorpora la `service_role` key. El número definitivo se asigna en una función de base de datos transaccional y la generación del documento protegido se hace en una Edge Function; ninguna de las dos se ejecuta desde el cliente.
 
 ## Invariants
 
 1. Toda lectura o mutación de información de clientes y contratos requiere la sesión de la cuenta propietaria y pasa por RLS.
 2. Un contrato en `firmado` es inmutable en sus términos comerciales; las correcciones se representan anulando el contrato y creando uno nuevo enlazado (`supersedes_contract_id`).
-3. El número de contrato se asigna una vez y no se reutiliza, incluso si el contrato se cancela o anula.
+3. El número de contrato se asigna una vez al confirmar, no se reutiliza y la serie es gapless; un contrato cancelado o anulado conserva su número.
 4. Cada cambio de estado y toda modificación relevante genera una entrada de auditoría con acción y fecha.
 5. El PDF o documento generado se asocia a una versión/snapshot del contrato, nunca a datos mutables sin identificar.
 6. Las claves secretas, incluida `SUPABASE_SERVICE_ROLE_KEY`, nunca se incluyen en la app ni en EAS public environment variables.
 7. La suma de pagos de un contrato nunca supera el monto total acordado; el saldo siempre es derivado.
 8. Las versiones de plantilla son inmutables: un cambio de condiciones produce una versión nueva.
+9. Toda mutación de un contrato verifica la `version` esperada; un conflicto se informa y nunca se resuelve por last-write-wins.
+10. Un contrato firmado conserva el `brand_snapshot` y el `template_snapshot` vigentes al confirmarse.
 
 ## Contract States
 
 `borrador` → `pendiente_de_firma` → `firmado`
 
 Estados alternativos: `cancelado` (no llegó a firmarse), `anulado` (se corrige un contrato firmado) y `archivado` (oculto de las listas activas). La anulación exige motivo y fecha, y el contrato de reemplazo se crea duplicando el original como `borrador`.
+
+## Data Retention
+
+- No hay purga automática en el MVP. Los contratos se archivan en lugar de eliminarse.
+- La retención operativa prevista es de 5 años desde la firma, con revisión manual posterior. Esta política debe validarse con asesoría legal (Ley 29733) antes de producción.
+- No se exportan CSV/ZIP en el MVP; la recuperación depende de los backups de Supabase y de los PDFs almacenados.
 
 ## Core Data Relationships
 
@@ -83,4 +116,7 @@ cuenta propietaria (1) ── posee ──< contracts >── (1) clients
                                       ├── (N) contract_payments
                                       ├── (N) contract_documents
                                       └── (N) contract_audit_log
+
+contract_counters (1 fila por serie)
+brand_settings (1 fila de configuración de marca)
 ```

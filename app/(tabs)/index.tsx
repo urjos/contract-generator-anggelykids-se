@@ -41,8 +41,7 @@ export default function HomeScreen() {
         <View className="mt-8 rounded-2xl bg-surface-muted p-5">
           <AppText className="text-lg font-semibold">Aún no hay datos</AppText>
           <AppText className="mt-2 text-body text-ink-muted">
-            Cuando conectes Supabase y crees el primer contrato, aquí verás el resumen de la
-            operación.
+            Cuando crees el primer contrato, aquí verás el resumen de la operación.
           </AppText>
         </View>
 
@@ -50,13 +49,13 @@ export default function HomeScreen() {
           <AppText className="text-lg font-semibold">Próximos pasos</AppText>
           <View className="mt-3 gap-3">
             <AppText className="rounded-xl border border-border bg-surface px-4 py-3 text-body">
-              1. Configurar Supabase y la cuenta propietaria
+              1. Crear el primer contrato
             </AppText>
             <AppText className="rounded-xl border border-border bg-surface px-4 py-3 text-body">
-              2. Implementar inicio de sesión
+              2. Registrar los clientes del evento
             </AppText>
             <AppText className="rounded-xl border border-border bg-surface px-4 py-3 text-body">
-              3. Crear el primer contrato
+              3. Configurar paquetes y datos de marca
             </AppText>
           </View>
         </View>
