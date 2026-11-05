@@ -4,11 +4,11 @@ Actualiza este archivo al completar cada cambio significativo.
 
 ## Current Phase
 
-Fase 2 — Supabase Auth. Feature 001 implementada; pendiente configuración real y verificación en Android.
+Fase 3 — Modelo de datos y RLS. Feature 001 implementada y verificada en Android; Feature 002 aplicada y validada en Supabase remoto. Solo queda confirmar la redirect URL de recuperación en el dashboard y crear un branch de prueba antes de cargar datos reales.
 
 ## Current Goal
 
-Configurar `.env.local` y las redirect URLs de Supabase, luego probar login, persistencia, recuperación y logout en un development build de Android.
+Cerrar formalmente Feature 002 y preparar Feature 003 (RPC transaccionales de contratos, numeración, pagos y transiciones de estado). Mantener como pendiente externo la redirect URL `anggelykids://reset-password` en Supabase y la creación de un branch/entorno de pruebas para pgTAP.
 
 ## Completed
 
@@ -38,44 +38,73 @@ Configurar `.env.local` y las redirect URLs de Supabase, luego probar login, per
 - Implementadas las guardas de rutas con `Stack.Protected`, restauración de sesión con reintento y refresco al volver del background.
 - Agregado cierre de sesión con confirmación en Ajustes y actualizados los textos de Inicio.
 - Verificados `npm run typecheck`, `npm run lint` y `npm run export:android`; se agregó `tslib` para resolver el bundle de Supabase.
+- Creada `context/feature-specs/002-modelo-datos-inicial-rls.md` con el modelo de datos, RLS, Storage, triggers, pruebas y runbook.
+- Corregido el checklist de Feature 001 para reflejar que la configuración real de Supabase y la prueba Android siguen pendientes.
+- Creados `supabase/config.toml`, scripts `db:reset`, `db:test` y `db:types`, y migraciones `20261103000100` a `20261103000600`.
+- Implementados enums, tablas, FKs compuestas, checks, índices, vista `contract_financials`, triggers de integridad/auditoría, RLS y bucket privado `contract-documents`.
+- Creado `supabase/seed.sql` con plantilla v1 y catálogo de referencia sin PII.
+- Creados `types/database.ts` y el cliente tipado en `lib/supabase.ts`.
+- Creados tests pgTAP `001_rls`, `002_constraints` y `003_audit_and_payments`.
+- Validada la sintaxis SQL externa con el parser `libpg-query`.
+- Ejecutadas las migraciones y el seed en PostgreSQL 18 embebido (PGlite) con un bootstrap de `auth`/`storage`; 40 comprobaciones de RLS, triggers, restricciones, borrado de borradores, auditoría, vista financiera y Storage pasaron.
+- Verificados `npm run typecheck` y `npm run lint`.
+- Aplicadas las 6 migraciones y el seed en el proyecto remoto `contract-generator-anggelykids-se` (`twowiheotxnhljowtady`), vinculado como producción: 10 tablas públicas, 1 plantilla y 6 ítems de catálogo.
+- Creados los scripts remotos `db:push:remote`, `db:push:remote:dry`, `db:seed:remote`, `db:test:remote` y `db:types:remote`.
+- Creado `scripts/run-remote-db-tests.mjs` para ejecutar pgTAP con `supabase db query --file` cuando Docker no está disponible.
+- Agregado `004_storage_and_edge_cases.test.sql`; las 60 aserciones de `001`–`004` pasaron contra Supabase remoto.
+- Corregidos los tests para reflejar el comportamiento real de Supabase: `immutable_table` en DELETE de pagos y cero filas visibles para `anon` en Storage.
+- Regenerado `types/database.ts` desde el esquema remoto en UTF-8 sin BOM; `npm run typecheck` y `npm run lint` pasan.
+- Verificado en Android el login, la persistencia de sesión y el logout de Feature 001.
 
 ## In Progress
 
-- Configuración del proyecto Supabase real y verificación manual del flujo completo en Android.
+- Ninguna implementación bloqueada. Pendiente externo: confirmar la redirect URL `anggelykids://reset-password` en el dashboard de Supabase y crear un branch/entorno de pruebas antes de cargar datos reales.
 
 ## Next Up
 
-1. Completar `.env.local` con Project URL y anon key.
-2. Agregar `anggelykids://reset-password` y la URL de desarrollo de Expo a las redirect URLs de Supabase.
-3. Probar login, persistencia, recuperación, enlaces inválidos, modo avión y logout en Android.
-4. Escribir las migraciones iniciales y RLS como Feature 002.
+1. Confirmar `anggelykids://reset-password` y la URL de desarrollo de Expo en las redirect URLs de Supabase.
+2. Crear un branch o proyecto de pruebas y mover allí la ejecución de `npm run db:test:remote` antes de cargar datos reales.
+3. Iniciar Feature 003: RPC de confirmación con numeración gapless, registro transaccional de pagos y transiciones de estado.
+4. Actualizar `context/feature-specs/003-*` antes de implementar.
 
 ## Resolved Questions
 
-| # | Pregunta | Decisión |
-| --- | --- | --- |
-| 1 | Formato del número de contrato | Serie independiente de 5 dígitos, `N° 00001`, sin prefijo de año. |
-| 2 | Estrategia de secuencia | Contador gapless en `contract_counters`, asignado al confirmar dentro de la misma transacción con bloqueo de fila. Los borradores no consumen número. |
-| 3 | Concurrencia multi-dispositivo | Bloqueo optimista con columna `version`; si el `UPDATE` no afecta la versión esperada se muestra conflicto y no se sobrescribe. |
-| 4 | Zona horaria | `America/Lima` fija. `event.starts_at` es `timestamptz`; se muestra en `es-PE`. |
-| 5 | Alta de la cuenta única | Manual en el dashboard de Supabase, con signups desactivados. Sin registro en la app. |
-| 6 | Teléfono de cliente | Se normaliza a E.164 y se usa para sugerir clientes existentes, pero no es un índice único: un mismo teléfono puede compartirse. |
-| 7 | Varios eventos por contrato | Un contrato cubre exactamente un evento. Varios eventos requieren contratos separados. |
-| 8 | Próximos eventos | Solo sección ordenada por fecha en Inicio; sin notificaciones ni recordatorios en el MVP. |
-| 9 | Exportación y retención | Sin exportación CSV/ZIP en el MVP. Retención operativa de 5 años desde la firma y revisión manual posterior; sin purga automática. Sujeta a validación legal. |
-| 10 | Supabase local | Solo proyecto remoto para el MVP; migraciones versionadas con Supabase CLI. Docker local es opcional para desarrollo. |
-| 11 | Ubicación del repositorio | El proyecto ya vive en `C:\Projects\Android`, fuera de OneDrive. Se mantiene allí. |
-| 12 | Fuente del documento de contrato | MVP con fuentes estándar del PDF (`Times-Roman` para cuerpo y `Helvetica-Bold` para títulos) y fuente del sistema en la previsualización. Sin fuentes personalizadas embebidas. |
-| 13 | Firma en el PDF | La firma de la representante se usa como PNG estático desde `assets/brand/signature.png`. La firma del cliente sigue siendo confirmación manual con fecha en el MVP. |
+| #   | Pregunta                         | Decisión                                                                                                                                                                        |
+| --- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Formato del número de contrato   | Serie independiente de 5 dígitos, `N° 00001`, sin prefijo de año.                                                                                                               |
+| 2   | Estrategia de secuencia          | Contador gapless en `contract_counters`, asignado al confirmar dentro de la misma transacción con bloqueo de fila. Los borradores no consumen número.                           |
+| 3   | Concurrencia multi-dispositivo   | Bloqueo optimista con columna `version`; si el `UPDATE` no afecta la versión esperada se muestra conflicto y no se sobrescribe.                                                 |
+| 4   | Zona horaria                     | `America/Lima` fija. `event.starts_at` es `timestamptz`; se muestra en `es-PE`.                                                                                                 |
+| 5   | Alta de la cuenta única          | Manual en el dashboard de Supabase, con signups desactivados. Sin registro en la app.                                                                                           |
+| 6   | Teléfono de cliente              | Se normaliza a E.164 y se usa para sugerir clientes existentes, pero no es un índice único: un mismo teléfono puede compartirse.                                                 |
+| 7   | Varios eventos por contrato      | Un contrato cubre exactamente un evento. Varios eventos requieren contratos separados.                                                                                          |
+| 8   | Próximos eventos                 | Solo sección ordenada por fecha en Inicio; sin notificaciones ni recordatorios en el MVP.                                                                                       |
+| 9   | Exportación y retención          | Sin exportación CSV/ZIP en el MVP. Retención operativa de 5 años desde la firma y revisión manual posterior; sin purga automática. Sujeta a validación legal.                    |
+| 10  | Supabase local                   | Solo proyecto remoto para el MVP; migraciones versionadas con Supabase CLI. Docker local es opcional para desarrollo.                                                            |
+| 11  | Ubicación del repositorio        | El proyecto ya vive en `C:\Projects\Android`, fuera de OneDrive. Se mantiene allí.                                                                                              |
+| 12  | Fuente del documento de contrato | MVP con fuentes estándar del PDF (`Times-Roman` para cuerpo y `Helvetica-Bold` para títulos) y fuente del sistema en la previsualización. Sin fuentes personalizadas embebidas. |
+| 13  | Firma en el PDF                  | La firma de la representante se usa como PNG estático desde `assets/brand/signature.png`. La firma del cliente sigue siendo confirmación manual con fecha en el MVP.             |
+| 14  | Nomenclatura de la base de datos | Tablas, columnas, enums y claves internas en inglés; etiquetas de UI y documentos en español.                                                                                   |
+| 15  | Acceso directo a contratos       | El cliente solo puede crear, editar y eliminar borradores. Confirmar, firmar, cancelar o archivar requerirá RPC `security definer` en Feature 003.                              |
+| 16  | Numeración y contadores          | `contract_counters` no tiene acceso directo para `authenticated`; la asignación gapless se implementa en la RPC de Feature 003.                                                  |
+| 17  | Modelo de propiedad              | Todas las tablas usan `owner_id` con `default auth.uid()` y RLS; las FKs compuestas impiden mezclar propietario, cliente y evento.                                              |
+| 18  | Datos de marca en seed           | No se siembran teléfonos, redes ni marcas inventadas; `brand_settings` se configura con datos reales antes de generar PDFs.                                                      |
+| 19  | Pruebas pgTAP sin Docker         | `npx supabase test db --remote` requiere Docker. Se usa `supabase db query --file` dentro de `begin`/`rollback` y se ejecuta desde `scripts/run-remote-db-tests.mjs`.            |
 
 ## Open Questions
 
-Ninguna bloquea el desarrollo. Quedan dependencias externas:
+Ninguna bloquea el desarrollo. Quedan dependencias externas y decisiones para features posteriores:
 
 - Confirmación legal del texto de condiciones; hasta entonces se conserva literal y versionado.
 - Archivos oficiales del logo y de la firma de la representante para reemplazar los placeholders de `assets/brand/`.
 - Teléfonos y redes sociales definitivos para el bloque de marca del PDF.
 - Si el correo integrado de Supabase no entrega de forma fiable, configurar SMTP propio antes de producción.
+- Corrección de pagos erróneos: al ser append-only, no se editan ni eliminan. Definir si se añadirá un movimiento de reverso con motivo.
+- Si el adelanto podrá registrarse antes de confirmar el contrato; el esquema lo permite, pero la RPC y la UI deben fijar la regla.
+- Validar con la responsable el vocabulario final de `event_type`; cualquier tipo nuevo requiere migración.
+- Definir si el logo y la firma de la representante vivirán en un bucket de Storage o solo en `assets/brand/` para el MVP.
+- Confirmar `anggelykids://reset-password` en las redirect URLs del proyecto Supabase remoto; el flujo de recuperación no se considera cerrado hasta probarlo en Android.
+- Crear un branch o proyecto Supabase de pruebas antes de cargar datos reales; hoy pgTAP corre contra producción con rollback y el proyecto está vacío.
 
 ## Architecture Decisions
 
@@ -93,6 +122,7 @@ Ninguna bloquea el desarrollo. Quedan dependencias externas:
 - Las mutaciones de contratos usan bloqueo optimista con `version`.
 - La configuración de marca (logo, firma, contacto y redes) vive en `brand_settings` y se copia al snapshot del contrato.
 - Los activos visuales de la app viven en `assets/brand/`; los placeholders deben sustituirse por los archivos oficiales antes de producción.
+- La validación de esquema y RLS se ejecuta contra Supabase remoto mediante `db query --file` mientras no haya Docker; los archivos pgTAP se envuelven en transacciones con rollback.
 
 ## Session Notes
 
@@ -100,3 +130,7 @@ Ninguna bloquea el desarrollo. Quedan dependencias externas:
 - `npm install` sobre `/mnt/c` falló con `ENOENT: rename` por la sincronización de OneDrive. El repositorio actual está en `C:\Projects\Android`, fuera de OneDrive; la instalación la hará el usuario en el entorno que prefiera.
 - NativeWind 4.2.7 declara soporte hasta Expo SDK 57; se está verificando sobre SDK 58. Si el bundle falla, la alternativa es NativeWind 5 RC o fijar SDK 57.
 - Los activos de `assets/brand/` son placeholders generados para desarrollo; el logo y la firma oficiales deben reemplazarlos conservando los nombres y proporciones indicados en `assets/brand/README.md`.
+- Sigue sin haber Docker, por lo que `npx supabase test db --remote` no puede ejecutarse. El fallback es `npm run db:test:remote`, que usa `npx supabase db query --remote --file ... --yes`; no requiere Docker.
+- El CLI de Supabase v3.0.0 está autenticado y el proyecto remoto está vinculado. `db:push:remote` y `db:seed:remote` usan el proyecto vinculado; `db:types:remote` genera desde el remoto.
+- Las pruebas pgTAP usan `begin`/`rollback` y un bloque `do` con `extensions.num_failed()` para fallar si alguna aserción no pasa. Se ejecutaron contra producción mientras el proyecto no tiene datos reales; crear un branch antes de operar con datos reales.
+- Si se genera `types/database.ts` desde PowerShell, usar `UTF8Encoding(false)` para evitar BOM; se verificó que el archivo actual empieza en `export`.

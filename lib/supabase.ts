@@ -4,6 +4,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 import { supabaseEnv } from '@/lib/env';
 import { authStorage } from '@/lib/secure-store';
+import type { Database } from '@/types/database';
 
 export class SupabaseNotConfiguredError extends Error {
   constructor() {
@@ -12,8 +13,8 @@ export class SupabaseNotConfiguredError extends Error {
   }
 }
 
-export const supabase: SupabaseClient | null = supabaseEnv
-  ? createClient(supabaseEnv.url, supabaseEnv.anonKey, {
+export const supabase: SupabaseClient<Database> | null = supabaseEnv
+  ? createClient<Database>(supabaseEnv.url, supabaseEnv.anonKey, {
       auth: {
         storage: authStorage,
         autoRefreshToken: true,
@@ -24,7 +25,7 @@ export const supabase: SupabaseClient | null = supabaseEnv
     })
   : null;
 
-export function getSupabase(): SupabaseClient {
+export function getSupabase(): SupabaseClient<Database> {
   if (!supabase) {
     throw new SupabaseNotConfiguredError();
   }

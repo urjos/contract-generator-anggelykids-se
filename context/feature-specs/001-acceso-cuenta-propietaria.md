@@ -5,7 +5,7 @@
 | Campo      | Valor                                                                                                  |
 | ---------- | ------------------------------------------------------------------------------------------------------ |
 | ID         | 001                                                                                                    |
-| Estado     | Implementada; pendiente configuración real y verificación Android                                      |
+| Estado     | Implementada y verificada en Android; pendiente redirect URL de recuperación en Supabase                |
 | Fase       | 2 — Supabase Auth                                                                                      |
 | Depende de | Unidad 1: scaffold Expo + NativeWind + navegación                                                      |
 | Habilita   | Feature 002: modelo de datos, migraciones y RLS                                                        |
@@ -341,9 +341,11 @@ export const supabase = createClient(url, anonKey, {
 - [x] Agregar restauración con estado de error y reintento.
 - [x] Agregar cierre de sesión con confirmación en Ajustes.
 - [x] Verificar `npm run typecheck`, `npm run lint` y `npm run export:android`.
-- [x] Configurar `.env.local`, redirect URLs de Supabase y la cuenta propietaria.
-- [x] Probar el flujo completo en Android y actualizar `progress-tracker.md`.
+- [x] Configurar `.env.local` y la cuenta propietaria en Supabase.
+- [ ] Confirmar `anggelykids://reset-password` en las redirect URLs del proyecto Supabase remoto.
+- [x] Probar login, persistencia y logout en Android.
+- [x] Actualizar `progress-tracker.md`.
 
 ## 19. Siguiente feature
 
-Feature 002: modelo de datos inicial y RLS — migraciones de `clients`, `events`, `service_catalog`, `contracts`, `contract_payments`, `contract_templates`, `contract_documents`, `contract_audit_log`, `contract_counters` y `brand_settings`, con políticas para `auth.uid()` y pruebas de acceso denegado sin sesión.
+Feature 002: modelo de datos inicial y RLS — creada en `context/feature-specs/002-modelo-datos-inicial-rls.md`. Incluye migraciones de `clients`, `events`, `service_catalog`, `contracts`, `contract_payments`, `contract_templates`, `contract_documents`, `contract_audit_log`, `contract_counters` y `brand_settings`, con políticas para `auth.uid()` y pruebas de acceso denegado sin sesión.
