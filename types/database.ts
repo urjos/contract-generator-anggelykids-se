@@ -117,6 +117,13 @@ export type Database = {
             foreignKeyName: "contract_audit_log_contract_owner_fkey"
             columns: ["contract_id", "owner_id"]
             isOneToOne: false
+            referencedRelation: "contract_overview"
+            referencedColumns: ["contract_id", "owner_id"]
+          },
+          {
+            foreignKeyName: "contract_audit_log_contract_owner_fkey"
+            columns: ["contract_id", "owner_id"]
+            isOneToOne: false
             referencedRelation: "contracts"
             referencedColumns: ["id", "owner_id"]
           },
@@ -192,6 +199,13 @@ export type Database = {
             foreignKeyName: "contract_documents_contract_owner_fkey"
             columns: ["contract_id", "owner_id"]
             isOneToOne: false
+            referencedRelation: "contract_overview"
+            referencedColumns: ["contract_id", "owner_id"]
+          },
+          {
+            foreignKeyName: "contract_documents_contract_owner_fkey"
+            columns: ["contract_id", "owner_id"]
+            isOneToOne: false
             referencedRelation: "contracts"
             referencedColumns: ["id", "owner_id"]
           },
@@ -240,6 +254,13 @@ export type Database = {
             columns: ["contract_id", "owner_id"]
             isOneToOne: false
             referencedRelation: "contract_financials"
+            referencedColumns: ["contract_id", "owner_id"]
+          },
+          {
+            foreignKeyName: "contract_payments_contract_owner_fkey"
+            columns: ["contract_id", "owner_id"]
+            isOneToOne: false
+            referencedRelation: "contract_overview"
             referencedColumns: ["contract_id", "owner_id"]
           },
           {
@@ -386,6 +407,13 @@ export type Database = {
             foreignKeyName: "contracts_supersedes_owner_fkey"
             columns: ["supersedes_contract_id", "owner_id"]
             isOneToOne: false
+            referencedRelation: "contract_overview"
+            referencedColumns: ["contract_id", "owner_id"]
+          },
+          {
+            foreignKeyName: "contracts_supersedes_owner_fkey"
+            columns: ["supersedes_contract_id", "owner_id"]
+            isOneToOne: false
             referencedRelation: "contracts"
             referencedColumns: ["id", "owner_id"]
           },
@@ -508,9 +536,265 @@ export type Database = {
         }
         Relationships: []
       }
+      contract_overview: {
+        Row: {
+          balance_cents: number | null
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          city: string | null
+          client_name: string | null
+          client_phone: string | null
+          client_visible_notes: string | null
+          confirmed_at: string | null
+          contract_id: string | null
+          contract_number: number | null
+          created_at: string | null
+          description: string | null
+          district: string | null
+          event_starts_at: string | null
+          event_type: Database["public"]["Enums"]["event_type"] | null
+          guest_count: number | null
+          internal_notes: string | null
+          mobility_amount_cents: number | null
+          owner_id: string | null
+          paid_amount_cents: number | null
+          signed_at: string | null
+          status: Database["public"]["Enums"]["contract_status"] | null
+          supersedes_contract_id: string | null
+          template_id: string | null
+          template_snapshot: Json | null
+          total_amount_cents: number | null
+          updated_at: string | null
+          venue_address: string | null
+          venue_name: string | null
+          version: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contracts_supersedes_owner_fkey"
+            columns: ["supersedes_contract_id", "owner_id"]
+            isOneToOne: false
+            referencedRelation: "contract_financials"
+            referencedColumns: ["contract_id", "owner_id"]
+          },
+          {
+            foreignKeyName: "contracts_supersedes_owner_fkey"
+            columns: ["supersedes_contract_id", "owner_id"]
+            isOneToOne: false
+            referencedRelation: "contract_overview"
+            referencedColumns: ["contract_id", "owner_id"]
+          },
+          {
+            foreignKeyName: "contracts_supersedes_owner_fkey"
+            columns: ["supersedes_contract_id", "owner_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id", "owner_id"]
+          },
+          {
+            foreignKeyName: "contracts_template_owner_fkey"
+            columns: ["template_id", "owner_id"]
+            isOneToOne: false
+            referencedRelation: "contract_templates"
+            referencedColumns: ["id", "owner_id"]
+          },
+        ]
+      }
     }
     Functions: {
-      [_ in never]: never
+      annul_and_replace_contract: {
+        Args: {
+          p_cancelled_at?: string
+          p_contract_id: string
+          p_expected_version: number
+          p_reason: string
+          p_replacement_event_id?: string
+        }
+        Returns: Json
+      }
+      archive_contract: {
+        Args: { p_contract_id: string; p_expected_version: number }
+        Returns: {
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          client_id: string
+          client_visible_notes: string | null
+          confirmed_at: string | null
+          contract_number: number | null
+          created_at: string
+          description: string
+          event_id: string
+          id: string
+          internal_notes: string | null
+          mobility_amount_cents: number
+          owner_id: string
+          signature_storage_path: string | null
+          signed_at: string | null
+          signed_by_name: string | null
+          status: Database["public"]["Enums"]["contract_status"]
+          supersedes_contract_id: string | null
+          template_id: string | null
+          template_snapshot: Json | null
+          total_amount_cents: number
+          updated_at: string
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "contracts"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      build_contract_snapshot: {
+        Args: {
+          p_brand: Database["public"]["Tables"]["brand_settings"]["Row"]
+          p_contract: Database["public"]["Tables"]["contracts"]["Row"]
+          p_template: Database["public"]["Tables"]["contract_templates"]["Row"]
+        }
+        Returns: Json
+      }
+      cancel_contract: {
+        Args: {
+          p_cancelled_at?: string
+          p_contract_id: string
+          p_expected_version: number
+          p_reason: string
+        }
+        Returns: {
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          client_id: string
+          client_visible_notes: string | null
+          confirmed_at: string | null
+          contract_number: number | null
+          created_at: string
+          description: string
+          event_id: string
+          id: string
+          internal_notes: string | null
+          mobility_amount_cents: number
+          owner_id: string
+          signature_storage_path: string | null
+          signed_at: string | null
+          signed_by_name: string | null
+          status: Database["public"]["Enums"]["contract_status"]
+          supersedes_contract_id: string | null
+          template_id: string | null
+          template_snapshot: Json | null
+          total_amount_cents: number
+          updated_at: string
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "contracts"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      confirm_contract: {
+        Args: { p_contract_id: string; p_expected_version: number }
+        Returns: {
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          client_id: string
+          client_visible_notes: string | null
+          confirmed_at: string | null
+          contract_number: number | null
+          created_at: string
+          description: string
+          event_id: string
+          id: string
+          internal_notes: string | null
+          mobility_amount_cents: number
+          owner_id: string
+          signature_storage_path: string | null
+          signed_at: string | null
+          signed_by_name: string | null
+          status: Database["public"]["Enums"]["contract_status"]
+          supersedes_contract_id: string | null
+          template_id: string | null
+          template_snapshot: Json | null
+          total_amount_cents: number
+          updated_at: string
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "contracts"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      next_contract_number: { Args: { p_owner_id: string }; Returns: number }
+      record_contract_payment: {
+        Args: {
+          p_amount_cents: number
+          p_contract_id: string
+          p_kind: Database["public"]["Enums"]["payment_kind"]
+          p_method: Database["public"]["Enums"]["payment_method"]
+          p_note?: string
+          p_paid_at?: string
+        }
+        Returns: {
+          amount_cents: number
+          contract_id: string
+          created_at: string
+          id: string
+          kind: Database["public"]["Enums"]["payment_kind"]
+          method: Database["public"]["Enums"]["payment_method"]
+          note: string | null
+          owner_id: string
+          paid_at: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "contract_payments"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      sign_contract: {
+        Args: {
+          p_contract_id: string
+          p_expected_version: number
+          p_signed_at?: string
+          p_signed_by_name: string
+        }
+        Returns: {
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          client_id: string
+          client_visible_notes: string | null
+          confirmed_at: string | null
+          contract_number: number | null
+          created_at: string
+          description: string
+          event_id: string
+          id: string
+          internal_notes: string | null
+          mobility_amount_cents: number
+          owner_id: string
+          signature_storage_path: string | null
+          signed_at: string | null
+          signed_by_name: string | null
+          status: Database["public"]["Enums"]["contract_status"]
+          supersedes_contract_id: string | null
+          template_id: string | null
+          template_snapshot: Json | null
+          total_amount_cents: number
+          updated_at: string
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "contracts"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       contract_status:

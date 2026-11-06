@@ -415,7 +415,7 @@ Relaciones y restricciones:
 | `service_catalog`      | Propio            | Propio                              | Propio                              | Denegado                            |
 | `contract_templates`   | Propio            | Propio                              | Solo `is_active`/`updated_at`       | Denegado                            |
 | `contracts`            | Propio            | Solo `draft`, sin confirmación      | Solo `draft`, sin confirmación      | Solo `draft`, sin pagos ni documentos |
-| `contract_payments`    | Propio            | Propio, con contrato propio         | Denegado                            | Denegado                            |
+| `contract_payments`    | Propio            | Denegado; solo RPC `record_contract_payment` (Feature 003) | Denegado                            | Denegado                            |
 | `contract_documents`   | Propio            | Denegado al cliente                 | Denegado                            | Denegado                            |
 | `contract_audit_log`   | Propio            | Denegado al cliente                 | Denegado                            | Denegado                            |
 | `contract_counters`    | Denegado          | Denegado                            | Denegado                            | Denegado                            |
@@ -430,7 +430,7 @@ Relaciones y restricciones:
 - Los `INSERT` usan `with check` para impedir que un usuario inserte filas con `owner_id` distinto.
 - Las FKs compuestas impiden asociar un cliente o evento de otro propietario.
 - `contracts` solo acepta escrituras directas en estado `draft`; confirmar, firmar, cancelar, anular o archivar requerirá RPC en Feature 003.
-- `contract_payments` permite insertar un pago si el contrato pertenece al usuario; las reglas de estado y numeración se aplican en la RPC de Feature 003.
+- Desde Feature 003, `contract_payments` ya no acepta `INSERT` directo de `authenticated`; el registro de pagos se centraliza en la RPC `record_contract_payment`, que valida propietario y estado del contrato. El `SELECT` propio se mantiene.
 - Las filas confirmadas son de solo lectura para el cliente móvil, incluso si el usuario es el propietario.
 - El `service_role` no se usa en la app; solo en migraciones, seed controlado y Edge Functions.
 
@@ -629,4 +629,4 @@ El script `scripts/run-remote-db-tests.mjs` ejecuta cada archivo con `npx supaba
 
 ## 24. Siguiente feature
 
-Feature 003: operaciones transaccionales de contratos — RPC de confirmación con numeración gapless, registro de pagos, transiciones de estado, anulación con reemplazo enlazado y auditoría semántica.
+Feature 003: operaciones transaccionales de contratos — RPC de confirmación con numeración gapless, registro de pagos, transiciones de estado, anulación con reemplazo enlazado y auditoría semántica. Plan detallado en `context/feature-specs/003-operaciones-transaccionales-contratos.md`.

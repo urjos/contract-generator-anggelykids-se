@@ -4,11 +4,11 @@ Actualiza este archivo al completar cada cambio significativo.
 
 ## Current Phase
 
-Fase 3 — Modelo de datos y RLS. Feature 001 implementada y verificada en Android; Feature 002 aplicada y validada en Supabase remoto. Solo queda confirmar la redirect URL de recuperación en el dashboard y crear un branch de prueba antes de cargar datos reales.
+Fase 4 — Operaciones de contratos. Features 001, 002 y 003 implementadas y verificadas; Feature 003 aplicada al proyecto remoto con 98 aserciones pgTAP de operaciones y 18 del modelo de lectura. Queda como pendiente externo la redirect URL de recuperación y crear un branch/entorno de pruebas antes de cargar datos reales.
 
 ## Current Goal
 
-Cerrar formalmente Feature 002 y preparar Feature 003 (RPC transaccionales de contratos, numeración, pagos y transiciones de estado). Mantener como pendiente externo la redirect URL `anggelykids://reset-password` en Supabase y la creación de un branch/entorno de pruebas para pgTAP.
+Abrir Feature 004 (UI de contratos: listado con `contract_overview`, formulario de borrador, detalle, historial y acciones sobre el servicio de contratos). Mantener como pendiente externo la redirect URL `anggelykids://reset-password` en Supabase y la creación de un branch/entorno de pruebas para pgTAP antes de operar con datos reales.
 
 ## Completed
 
@@ -55,6 +55,14 @@ Cerrar formalmente Feature 002 y preparar Feature 003 (RPC transaccionales de co
 - Corregidos los tests para reflejar el comportamiento real de Supabase: `immutable_table` en DELETE de pagos y cero filas visibles para `anon` en Storage.
 - Regenerado `types/database.ts` desde el esquema remoto en UTF-8 sin BOM; `npm run typecheck` y `npm run lint` pasan.
 - Verificado en Android el login, la persistencia de sesión y el logout de Feature 001.
+- Creada `context/feature-specs/003-operaciones-transaccionales-contratos.md` con la máquina de estados, RPC, snapshot, numeración, pagos, auditoría, RLS, pruebas y criterios de aceptación.
+- Creada la migración `20261103000700_contract_operations.sql` con `next_contract_number`, `build_contract_snapshot`, las RPC de confirmar, firmar, cancelar, anular con reemplazo, archivar y registrar pago, el nuevo trigger de auditoría semántica y la revocación del `INSERT` directo de pagos.
+- Ajustada `contracts_status_requirements` en la migración `00700` para que `archived` conserve `cancelled_at` y `cancellation_reason` de contratos cancelados o anulados.
+- Creada la migración `20261103000800_contract_read_model.sql` con la vista `contract_overview` (`security_invoker = true`) y permisos solo para `authenticated`.
+- Implementados `features/contracts/contract-service.ts`, `contract-schemas.ts` y `contract-errors.ts` con Zod y traducción de tokens de error.
+- Actualizados `supabase/tests/001_rls.test.sql` y `types/database.ts` para el nuevo contrato de pagos y los tipos RPC/vista generados desde remoto.
+- Creadas `005_contract_operations.test.sql` (98 aserciones) y `006_contract_read_model.test.sql` (18 aserciones); las seis suites pgTAP pasan contra el proyecto remoto.
+- Verificados `npm run typecheck`, `npm run lint` y `npm run db:push:remote` con las migraciones aplicadas.
 
 ## In Progress
 
@@ -64,8 +72,8 @@ Cerrar formalmente Feature 002 y preparar Feature 003 (RPC transaccionales de co
 
 1. Confirmar `anggelykids://reset-password` y la URL de desarrollo de Expo en las redirect URLs de Supabase.
 2. Crear un branch o proyecto de pruebas y mover allí la ejecución de `npm run db:test:remote` antes de cargar datos reales.
-3. Iniciar Feature 003: RPC de confirmación con numeración gapless, registro transaccional de pagos y transiciones de estado.
-4. Actualizar `context/feature-specs/003-*` antes de implementar.
+3. Implementar Feature 004: listado y búsqueda con `contract_overview`, formulario de borrador, detalle, historial y acciones conectadas a `features/contracts/contract-service.ts`.
+4. Mantener `npm run db:test:remote`, `npm run typecheck` y `npm run lint` en verde antes de abrir cada feature.
 
 ## Resolved Questions
 
@@ -90,6 +98,8 @@ Cerrar formalmente Feature 002 y preparar Feature 003 (RPC transaccionales de co
 | 17  | Modelo de propiedad              | Todas las tablas usan `owner_id` con `default auth.uid()` y RLS; las FKs compuestas impiden mezclar propietario, cliente y evento.                                              |
 | 18  | Datos de marca en seed           | No se siembran teléfonos, redes ni marcas inventadas; `brand_settings` se configura con datos reales antes de generar PDFs.                                                      |
 | 19  | Pruebas pgTAP sin Docker         | `npx supabase test db --remote` requiere Docker. Se usa `supabase db query --file` dentro de `begin`/`rollback` y se ejecuta desde `scripts/run-remote-db-tests.mjs`.            |
+| 20  | Escritura directa de pagos       | Desde Feature 003 se revoca `INSERT` de `contract_payments` a `authenticated`; toda alta pasa por `record_contract_payment` para validar propietario y estado.                    |
+| 21  | Archivo de contratos cerrados    | `archived` es terminal y conserva los campos de cancelación de su estado previo; `contracts_status_requirements` se reemplazó en `00700` para permitirlo.                        |
 
 ## Open Questions
 
@@ -134,3 +144,6 @@ Ninguna bloquea el desarrollo. Quedan dependencias externas y decisiones para fe
 - El CLI de Supabase v3.0.0 está autenticado y el proyecto remoto está vinculado. `db:push:remote` y `db:seed:remote` usan el proyecto vinculado; `db:types:remote` genera desde el remoto.
 - Las pruebas pgTAP usan `begin`/`rollback` y un bloque `do` con `extensions.num_failed()` para fallar si alguna aserción no pasa. Se ejecutaron contra producción mientras el proyecto no tiene datos reales; crear un branch antes de operar con datos reales.
 - Si se genera `types/database.ts` desde PowerShell, usar `UTF8Encoding(false)` para evitar BOM; se verificó que el archivo actual empieza en `export`.
+- Las RPC usan `security definer` con `search_path = public, pg_temp`; los helpers `next_contract_number` y `build_contract_snapshot` no tienen `EXECUTE` para roles de API.
+- La numeración se prueba con un incremento dentro de un bloque `exception` que fuerza rollback; el contador conserva el mismo `next_value`.
+- El proyecto remoto sigue sin datos reales, por lo que las suites pgTAP con `begin`/`rollback` se ejecutaron contra producción; crear el branch antes de cargar datos reales.

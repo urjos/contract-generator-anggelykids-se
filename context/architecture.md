@@ -36,7 +36,7 @@ Los importes se guardan como enteros en céntimos para evitar errores de punto f
 
 ### Numeración y concurrencia
 
-- `contract_counters` contiene una fila por serie (`name`, `next_value`) y se actualiza con `SELECT ... FOR UPDATE` dentro de la transacción que confirma el contrato.
+- `contract_counters` contiene una fila por serie (`series`, `next_value`) y se actualiza con `SELECT ... FOR UPDATE` dentro de la transacción que confirma el contrato.
 - El número `N° 00001` se asigna una sola vez al pasar a `pendiente_de_firma`; los borradores no consumen número. Un rollback no consume el número, por lo que la serie es gapless.
 - `contracts.version` empieza en 1 y se incrementa en cada mutación. Los `UPDATE` incluyen `version = version_esperada`; si no afectan filas, la app informa un conflicto y recarga el contrato en lugar de sobrescribirlo.
 
@@ -54,7 +54,7 @@ Los importes se guardan como enteros en céntimos para evitar errores de punto f
 
 ### Pagos
 
-- `contract_payments` registra `contract_id`, `amount_cents`, `kind` (`deposit` | `balance`), `method` (`efectivo` | `yape` | `plin` | `transferencia` | `otro`), `paid_at`, `note`, `created_at`.
+- `contract_payments` registra `contract_id`, `amount_cents`, `kind` (`deposit` | `balance`), `method` (`cash` | `yape` | `plin` | `bank_transfer` | `other`), `paid_at`, `note`, `created_at`.
 - El primer pago suele ser el adelanto, pero el modelo admite cualquier secuencia de abonos.
 - El PDF confirmado congela el "a cuenta" y el saldo del momento de la firma; los abonos posteriores se reflejan en el detalle y la auditoría, no en el documento ya emitido.
 

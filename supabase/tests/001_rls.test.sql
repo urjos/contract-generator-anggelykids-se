@@ -201,12 +201,24 @@ select is(
 );
 
 select lives_ok(
+  $$select public.record_contract_payment(
+      (select id from public.contracts where status = 'draft' limit 1),
+      5000,
+      'deposit',
+      'cash'
+    )$$,
+  'owner can record a deposit on a draft through the RPC'
+);
+
+select throws_ok(
   $$insert into public.contract_payments (contract_id, amount_cents, kind, method)
-    select id, 5000, 'deposit', 'cash'
+    select id, 100, 'deposit', 'cash'
     from public.contracts
     where status = 'draft'
     limit 1$$,
-  'owner can record a deposit on a draft'
+  '42501',
+  null,
+  'direct payment inserts are denied'
 );
 
 with deleted as (
