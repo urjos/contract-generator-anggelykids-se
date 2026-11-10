@@ -1,10 +1,11 @@
 import '../global.css';
 
+import { QueryClientProvider } from '@tanstack/react-query';
 import { Stack, usePathname, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -14,6 +15,7 @@ import { AuthProvider } from '@/features/auth/auth-provider';
 import { SessionRestoreError } from '@/features/auth/components/session-restore-error';
 import { SupabaseConfigError } from '@/features/auth/components/supabase-config-error';
 import { useAuth } from '@/features/auth/use-auth';
+import { createQueryClient } from '@/lib/query-client';
 
 void SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
@@ -43,6 +45,8 @@ function RootNavigator() {
         }}>
         <Stack.Protected guard={status === 'authenticated'} redirectTo="/(auth)/login">
           <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="contracts/[id]/index" />
+          <Stack.Screen name="contracts/[id]/edit" />
         </Stack.Protected>
         <Stack.Protected guard={status !== 'authenticated'} redirectTo="/(tabs)">
           <Stack.Screen name="(auth)" />
@@ -69,16 +73,20 @@ function RootNavigator() {
 }
 
 export default function RootLayout() {
+  const [queryClient] = useState(createQueryClient);
+
   useEffect(() => {
     void SystemUI.setBackgroundColorAsync(colors.canvas);
   }, []);
 
   return (
     <SafeAreaProvider>
-      <StatusBar style="dark" />
-      <AuthProvider>
-        <RootNavigator />
-      </AuthProvider>
+      <QueryClientProvider client={queryClient}>
+        <StatusBar style="dark" />
+        <AuthProvider>
+          <RootNavigator />
+        </AuthProvider>
+      </QueryClientProvider>
     </SafeAreaProvider>
   );
 }

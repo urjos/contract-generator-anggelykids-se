@@ -9,6 +9,7 @@ import { colors } from "@/constants/theme";
 import { toAuthOperationError } from "@/features/auth/auth-errors";
 import { AuthErrorBanner } from "@/features/auth/components/auth-error-banner";
 import { useAuth } from "@/features/auth/use-auth";
+import { BrandSettingsForm } from "@/features/brand/components/brand-settings-form";
 
 export default function SettingsScreen() {
   const { session, signOut } = useAuth();
@@ -51,11 +52,15 @@ export default function SettingsScreen() {
       >
         <AppText className="mt-2 text-4xl font-semibold">Ajustes</AppText>
         <AppText className="mt-2 text-body text-ink-muted">
-          Administra tu cuenta y, más adelante, los paquetes, plantillas y datos
-          de marca.
+          Administra los datos de marca y tu cuenta. Más adelante podrás
+          gestionar aquí los paquetes y las plantillas.
         </AppText>
 
-        <View className="p-5 mt-8 rounded-2xl border border-border bg-surface">
+        <View className="mt-8">
+          <BrandSettingsForm />
+        </View>
+
+        <View className="p-5 mt-6 rounded-2xl border border-border bg-surface">
           <View className="flex-row gap-3 items-center">
             <View className="justify-center items-center w-11 h-11 rounded-full bg-surface-muted">
               <UserRound color={colors["brand-strong"]} size={22} />
@@ -89,8 +94,7 @@ export default function SettingsScreen() {
         <View className="p-5 mt-6 rounded-2xl bg-surface-muted">
           <AppText className="text-lg font-semibold">Próximamente</AppText>
           <AppText className="mt-2 text-body text-ink-muted">
-            Catálogo de paquetes, versiones de plantilla y datos de marca de la
-            empresa.
+            Catálogo de paquetes y versiones de plantilla.
           </AppText>
         </View>
 

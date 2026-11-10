@@ -4,11 +4,11 @@ Actualiza este archivo al completar cada cambio significativo.
 
 ## Current Phase
 
-Fase 4 — Operaciones de contratos. Features 001, 002 y 003 implementadas y verificadas; Feature 003 aplicada al proyecto remoto con 98 aserciones pgTAP de operaciones y 18 del modelo de lectura. Queda como pendiente externo la redirect URL de recuperación y crear un branch/entorno de pruebas antes de cargar datos reales.
+Fase 4 — Operaciones de contratos concluida. Features 001, 002, 003, 004 y 004b implementadas y verificadas en Android. La 004 cubre listado, búsqueda, borrador, detalle, pagos, historial y acciones; la 004b agrega la configuración de datos de marca en Ajustes. `typecheck`, `lint` y `export:android` pasan.
 
 ## Current Goal
 
-Abrir Feature 004 (UI de contratos: listado con `contract_overview`, formulario de borrador, detalle, historial y acciones sobre el servicio de contratos). Mantener como pendiente externo la redirect URL `anggelykids://reset-password` en Supabase y la creación de un branch/entorno de pruebas para pgTAP antes de operar con datos reales.
+Abrir Feature 005 (PDF desde el snapshot y Edge Function). Mantener como pendiente externo la redirect URL `anggelykids://reset-password` en Supabase y la creación de un branch/entorno de pruebas para pgTAP antes de operar con datos reales.
 
 ## Completed
 
@@ -63,17 +63,39 @@ Abrir Feature 004 (UI de contratos: listado con `contract_overview`, formulario 
 - Actualizados `supabase/tests/001_rls.test.sql` y `types/database.ts` para el nuevo contrato de pagos y los tipos RPC/vista generados desde remoto.
 - Creadas `005_contract_operations.test.sql` (98 aserciones) y `006_contract_read_model.test.sql` (18 aserciones); las seis suites pgTAP pasan contra el proyecto remoto.
 - Verificados `npm run typecheck`, `npm run lint` y `npm run db:push:remote` con las migraciones aplicadas.
+- Creada `context/feature-specs/004-ui-contratos.md` con alcance, flujos, rutas, validaciones, criterios y checklist.
+- Incorporado `@tanstack/react-query` con `lib/query-client.ts` y `QueryClientProvider` en el layout raíz.
+- Creados formateadores centralizados en `lib/format.ts` para PEN, fechas `America/Lima`, teléfonos, importes y búsqueda segura.
+- Creados componentes UI reutilizables: campo de texto, banner de error, cabecera, tarjeta de sección, estado vacío/error, hoja modal y chips de opción.
+- Ampliados `contract-service.ts`, `contract-schemas.ts` y `contract-errors.ts` con lecturas de `contract_overview`, pagos, auditoría, borradores y traducción de errores de PostgREST.
+- Creados `features/clients/client-service.ts` y `features/catalog/catalog-service.ts`.
+- Implementado el listado de contratos con búsqueda, filtros por estado, archivados y tarjetas con saldo.
+- Implementado el formulario de creación y edición de borrador con reutilización de clientes, paquetes, normalización de fecha/teléfono e importes en céntimos.
+- La fecha y la hora se eligen con `@react-native-community/datetimepicker`; la selección completa el valor `AAAA-MM-DD HH:mm` en hora de Lima.
+- El celular se captura como `999 999 999`, se limita a 9 dígitos y se normaliza a `+51`; cantidades distintas se rechazan en el formulario y en el payload.
+- Implementado el detalle con cliente, evento, importes, notas, pagos, historial y acciones por estado.
+- Implementadas las acciones de confirmar, firmar, cancelar, anular con reemplazo, archivar, eliminar borrador y registrar pago.
+- Registradas las rutas protegidas `contracts/[id]/index` y `contracts/[id]/edit`.
+- Creada `context/feature-specs/004b-ajustes-datos-marca.md` para desbloquear la confirmación de contratos.
+- Creada la migración `20261103000900_brand_settings_writes.sql` que otorga `select`, `insert` y `update` sobre `brand_settings` a `authenticated`; las políticas RLS existentes siguen limitando la fila al propietario.
+- Implementados `brand-types.ts`, `brand-schemas.ts`, `brand-errors.ts`, `brand-service.ts` y `use-brand-settings.ts`.
+- Implementado el formulario `Datos de marca` en Ajustes con nombre comercial, teléfono, WhatsApp e Instagram, Facebook y TikTok opcionales.
+- El formulario normaliza teléfonos a `+51` y exige exactamente 9 dígitos; actualiza la fila existente o la crea si falta.
+- Actualizado el mensaje de `contract_brand_unavailable` para dirigir a Ajustes.
+- Verificados `npm run typecheck`, `npm run lint` y `npm run export:android`.
+- Aplicada la migración `20261103000900` al proyecto remoto; los grants de `select`, `insert` y `update` se verificaron con `has_table_privilege` y con un insert/update bajo el rol `authenticated` dentro de una transacción con rollback.
+- Verificada manualmente en Android la configuración de marca y el recorrido completo de Feature 004: listado, borrador, detalle, pagos y acciones de estado. Feature 004 y 004b cerradas.
 
 ## In Progress
 
-- Ninguna implementación bloqueada. Pendiente externo: confirmar la redirect URL `anggelykids://reset-password` en el dashboard de Supabase y crear un branch/entorno de pruebas antes de cargar datos reales.
+- Ninguna implementación bloqueada. Pendientes externos: confirmar la redirect URL `anggelykids://reset-password` en el dashboard de Supabase y crear un branch/entorno de pruebas antes de cargar datos reales.
 
 ## Next Up
 
 1. Confirmar `anggelykids://reset-password` y la URL de desarrollo de Expo en las redirect URLs de Supabase.
 2. Crear un branch o proyecto de pruebas y mover allí la ejecución de `npm run db:test:remote` antes de cargar datos reales.
-3. Implementar Feature 004: listado y búsqueda con `contract_overview`, formulario de borrador, detalle, historial y acciones conectadas a `features/contracts/contract-service.ts`.
-4. Mantener `npm run db:test:remote`, `npm run typecheck` y `npm run lint` en verde antes de abrir cada feature.
+3. Implementar Feature 005: PDF desde `template_snapshot`, Edge Function, `contract_documents`, descarga y WhatsApp.
+4. Mantener `npm run db:test:remote`, `npm run typecheck`, `npm run lint` y `npm run export:android` en verde antes de abrir cada feature.
 
 ## Resolved Questions
 
@@ -100,6 +122,10 @@ Abrir Feature 004 (UI de contratos: listado con `contract_overview`, formulario 
 | 19  | Pruebas pgTAP sin Docker         | `npx supabase test db --remote` requiere Docker. Se usa `supabase db query --file` dentro de `begin`/`rollback` y se ejecuta desde `scripts/run-remote-db-tests.mjs`.            |
 | 20  | Escritura directa de pagos       | Desde Feature 003 se revoca `INSERT` de `contract_payments` a `authenticated`; toda alta pasa por `record_contract_payment` para validar propietario y estado.                    |
 | 21  | Archivo de contratos cerrados    | `archived` es terminal y conserva los campos de cancelación de su estado previo; `contracts_status_requirements` se reemplazó en `00700` para permitirlo.                        |
+| 22  | Navegación de la UI de contratos | El detalle y la edición viven en `contracts/[id]/index` y `contracts/[id]/edit` bajo `Stack.Protected`; la pestaña Crear siempre inicia un borrador nuevo.                      |
+| 23  | Estado remoto de la UI           | TanStack Query administra listado, detalle, pagos, auditoría, clientes y catálogo; las mutaciones invalidan todas las consultas de contratos.                                   |
+| 24  | Pagos en borradores              | La UI permite registrar pagos mientras el contrato siga en `draft`; el adelanto puede existir antes de confirmar y la RPC valida el total.                                    |
+| 25  | Edición de datos de marca        | `brand_settings` se edita desde Ajustes con `insert`/`update` directos bajo RLS; la fila es única por propietario y se crea si no existe antes de confirmar.                    |
 
 ## Open Questions
 
@@ -110,7 +136,7 @@ Ninguna bloquea el desarrollo. Quedan dependencias externas y decisiones para fe
 - Teléfonos y redes sociales definitivos para el bloque de marca del PDF.
 - Si el correo integrado de Supabase no entrega de forma fiable, configurar SMTP propio antes de producción.
 - Corrección de pagos erróneos: al ser append-only, no se editan ni eliminan. Definir si se añadirá un movimiento de reverso con motivo.
-- Si el adelanto podrá registrarse antes de confirmar el contrato; el esquema lo permite, pero la RPC y la UI deben fijar la regla.
+- Confirmar con la responsable si el adelanto en borradores debe mantenerse; hoy la UI y la RPC lo permiten.
 - Validar con la responsable el vocabulario final de `event_type`; cualquier tipo nuevo requiere migración.
 - Definir si el logo y la firma de la representante vivirán en un bucket de Storage o solo en `assets/brand/` para el MVP.
 - Confirmar `anggelykids://reset-password` en las redirect URLs del proyecto Supabase remoto; el flujo de recuperación no se considera cerrado hasta probarlo en Android.
@@ -147,3 +173,11 @@ Ninguna bloquea el desarrollo. Quedan dependencias externas y decisiones para fe
 - Las RPC usan `security definer` con `search_path = public, pg_temp`; los helpers `next_contract_number` y `build_contract_snapshot` no tienen `EXECUTE` para roles de API.
 - La numeración se prueba con un incremento dentro de un bloque `exception` que fuerza rollback; el contador conserva el mismo `next_value`.
 - El proyecto remoto sigue sin datos reales, por lo que las suites pgTAP con `begin`/`rollback` se ejecutaron contra producción; crear el branch antes de cargar datos reales.
+- Feature 004 agregó `@tanstack/react-query` como dependencia directa y crea el `QueryClient` una sola vez en el layout raíz.
+- Se agregó `@react-native-community/datetimepicker` con su config plugin para los selectores de fecha y hora; el valor de formulario sigue siendo el texto `AAAA-MM-DD HH:mm` en hora de Lima.
+- La creación y edición de borradores se hace con inserts/updates directos bajo RLS, con limpieza o restauración best-effort si falla un paso intermedio; no se añadió una RPC nueva. Si el flujo crece, conviene moverlo a una RPC transaccional.
+- La fecha del evento se interpreta explícitamente en `America/Lima` con offset `-05:00`; no depende de la zona horaria del dispositivo.
+- El detalle y la edición de contratos usan rutas anidadas protegidas; la pestaña Crear se remonta al recibir foco para no conservar un formulario anterior.
+- La migración `00900` solo agrega los grants de escritura de `brand_settings`; las políticas RLS ya existentes restringen la fila a `owner_id = auth.uid()` e `id = 1`.
+- La confirmación de contratos fallaba con `contract_brand_unavailable` porque el seed no crea marca; ahora Ajustes crea la fila con nombre comercial, teléfono, WhatsApp y redes opcionales.
+- La responsable confirmó en Android que la Feature 004 y la configuración de marca funcionan; la fase 4 queda cerrada.

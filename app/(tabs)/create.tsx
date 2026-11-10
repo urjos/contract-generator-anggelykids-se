@@ -1,13 +1,30 @@
-import { FilePlus2 } from 'lucide-react-native';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
 
-import { PlaceholderScreen } from '@/components/ui/placeholder-screen';
+import { Screen } from '@/components/ui/screen';
+import { DraftForm } from '@/features/contracts/components/draft-form';
 
 export default function CreateContractScreen() {
+  const router = useRouter();
+  const [formKey, setFormKey] = useState(0);
+
+  useFocusEffect(
+    useCallback(() => {
+      setFormKey((current) => current + 1);
+    }, []),
+  );
+
   return (
-    <PlaceholderScreen
-      title="Crear contrato"
-      description="El formulario guiado de cliente, evento, servicio y pagos se habilitará cuando el esquema esté validado."
-      icon={FilePlus2}
-    />
+    <Screen>
+      <DraftForm
+        key={formKey}
+        onSaved={(contractId) => {
+          router.replace({
+            pathname: '/contracts/[id]',
+            params: { id: contractId },
+          });
+        }}
+      />
+    </Screen>
   );
 }

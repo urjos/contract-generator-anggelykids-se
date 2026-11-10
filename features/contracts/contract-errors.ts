@@ -16,7 +16,7 @@ const MESSAGES: Record<string, string> = {
   contract_template_unavailable:
     'No hay una plantilla activa. Configúrala en Ajustes antes de continuar.',
   contract_brand_unavailable:
-    'Configura los datos de marca antes de confirmar el contrato.',
+    'Completa los datos de marca en Ajustes antes de confirmar el contrato.',
   contract_number_exhausted: 'Se agotó la numeración disponible de contratos.',
   invalid_input: 'Revisa los datos ingresados e inténtalo de nuevo.',
   replacement_event_invalid: 'El evento de reemplazo no es válido.',
@@ -24,6 +24,14 @@ const MESSAGES: Record<string, string> = {
   payment_exceeds_total: 'El pago supera el saldo pendiente del contrato.',
   append_only_table: 'Esta operación no está permitida.',
   immutable_table: 'Esta operación no está permitida.',
+  PGRST116: 'El registro ya no está disponible.',
+};
+
+const CONSTRAINT_MESSAGES: Record<string, string> = {
+  '23514': 'Revisa los datos del contrato. Hay un valor fuera de rango.',
+  '23503': 'No se puede completar porque hay datos relacionados en uso.',
+  '23505': 'Ya existe un registro con esos datos.',
+  '23502': 'Falta un dato obligatorio del contrato.',
 };
 
 export class ContractOperationError extends Error {
@@ -68,6 +76,14 @@ export function toContractOperationError(error: unknown): ContractOperationError
       'No tienes permiso para realizar esta operación.',
       error.code,
     );
+  }
+
+  if (error.code && CONSTRAINT_MESSAGES[error.code]) {
+    return new ContractOperationError(CONSTRAINT_MESSAGES[error.code]!, error.code);
+  }
+
+  if (error.code && MESSAGES[error.code]) {
+    return new ContractOperationError(MESSAGES[error.code]!, error.code);
   }
 
   if (error.status === 0 || error.name === 'AuthRetryableFetchError') {
